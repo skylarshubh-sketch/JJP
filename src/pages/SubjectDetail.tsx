@@ -1,4 +1,5 @@
 import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Circle } from 'lucide-react';
 import { courses } from '../data/mockData';
@@ -24,6 +25,7 @@ ChartJS.register(
 
 const SubjectDetail: React.FC = () => {
   const { subjectId } = useParams();
+  const [roadmapState, setRoadmapState] = useState<{ [key: string]: boolean }>({});
   
   // Find subject across all courses
   let subject = null;
@@ -42,6 +44,32 @@ const SubjectDetail: React.FC = () => {
       </div>
     );
   }
+
+  // Initialize roadmap state
+  useEffect(() => {
+    const initialState: { [key: string]: boolean } = {};
+    subject.roadmap.forEach(item => {
+      initialState[item.id] = item.completed;
+    });
+    setRoadmapState(initialState);
+  }, [subject.roadmap]);
+
+  // Toggle roadmap item completion
+  const toggleRoadmapItem = (itemId: string) => {
+    setRoadmapState(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
+  };
+
+  // Calculate dynamic progress
+  const calculateProgress = () => {
+    const totalItems = subject.roadmap.length;
+    const completedItems = Object.values(roadmapState).filter(Boolean).length;
+    return Math.round((completedItems / totalItems) * 100);
+  };
+
+  const dynamicProgress = Object.keys(roadmapState).length > 0 ? calculateProgress() : subject.progress;
 
   const chartData = {
     labels: subject.testData.map(test => test.testName),
@@ -111,11 +139,21 @@ const SubjectDetail: React.FC = () => {
         <h1 className="text-4xl font-handwritten text-black mb-2">{subject.name}</h1>
         <div className="flex items-center space-x-4 mb-6">
           <span className="text-lg font-handwritten text-gray-600">
-            Progress: {subject.progress}%
+            Progress: {dynamicProgress}%
           </span>
           <span className="text-lg font-handwritten text-gray-600">
             Total Hours: {subject.totalHours}
           </span>
+        </div>
+        
+        {/* Dynamic Progress Bar */}
+        <div className="mb-6">
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div 
+              className="bg-black h-3 rounded-full transition-all duration-500" 
+              style={{ width: `${dynamicProgress}%` }}
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -125,16 +163,20 @@ const SubjectDetail: React.FC = () => {
           <h2 className="text-2xl font-handwritten text-black mb-4">Learning Roadmap</h2>
           <div className="space-y-4">
             {subject.roadmap.map((item, index) => (
-              <div key={item.id} className="flex items-start space-x-3">
+              <div 
+                key={item.id} 
+                className="flex items-start space-x-3 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
+                onClick={() => toggleRoadmapItem(item.id)}
+              >
                 <div className="mt-1">
-                  {item.completed ? (
+                  {roadmapState[item.id] ? (
                     <CheckCircle size={24} className="text-green-600" />
                   ) : (
                     <Circle size={24} className="text-gray-400" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className={`text-lg font-handwritten ${item.completed ? 'text-black' : 'text-gray-600'}`}>
+                  <h3 className={`text-lg font-handwritten ${roadmapState[item.id] ? 'text-black' : 'text-gray-600'}`}>
                     {item.title}
                   </h3>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -142,7 +184,7 @@ const SubjectDetail: React.FC = () => {
                       <span 
                         key={topicIndex}
                         className={`px-2 py-1 text-sm rounded-full border ${
-                          item.completed 
+                          roadmapState[item.id] 
                             ? 'bg-black text-white border-black' 
                             : 'bg-gray-100 text-gray-600 border-gray-300'
                         }`}

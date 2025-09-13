@@ -16,9 +16,10 @@ import {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  theme?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, theme = 'light' }) => {
   const location = useLocation();
 
   const menuItems = [
@@ -44,17 +45,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       )}
       
       {/* Sidebar */}
-      <div className={`fixed left-0 top-0 h-full w-64 bg-white border-r-2 border-black transform transition-transform duration-300 z-50 ${
+      <div className={`fixed left-0 top-0 h-full w-64 border-r-2 transform transition-transform duration-300 z-50 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
+      } ${
+        theme === 'dark' 
+          ? 'bg-gray-800 border-gray-600' 
+          : 'bg-white border-black'
       }`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-handwritten text-black">Kaagaz</h1>
+            <h1 className={`text-3xl font-handwritten ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Kaagaz</h1>
             <button 
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-1 rounded-lg transition-colors ${
+                theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+              }`}
             >
-              <X size={20} />
+              <X size={20} className={theme === 'dark' ? 'text-white' : 'text-black'} />
             </button>
           </div>
           
@@ -70,8 +77,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   onClick={onClose}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors font-handwritten text-lg ${
                     isActive 
-                      ? 'bg-black text-white' 
-                      : 'text-black hover:bg-gray-100'
+                      ? (theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white')
+                      : (theme === 'dark' 
+                          ? 'text-white hover:bg-gray-700' 
+                          : 'text-black hover:bg-gray-100')
                   }`}
                 >
                   <Icon size={20} />
